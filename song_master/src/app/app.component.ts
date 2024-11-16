@@ -2,6 +2,7 @@ import { Component, createNgModuleRef, ElementRef, ViewChild } from '@angular/co
 import { RouterOutlet } from '@angular/router';
 import { Circle } from './models/circle.model';
 
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -14,12 +15,17 @@ export class AppComponent {
   title = 'song-master';
 
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
+  ton: number = 1; // Variable pour ajuster la tonalité (-1 à 1)
+  
+
   private context!: CanvasRenderingContext2D;
+
 
   ngAfterViewInit() {
     // Obtenir le contexte 2D du canvas
     this.context = this.canvas.nativeElement.getContext('2d')!;
   }
+
 
   getCanvasCenter() 
   {
@@ -69,12 +75,13 @@ export class AppComponent {
   }
 
   animate(){
+    
     this.context.clearRect(0, 0, this.context.canvas.width , this.context.canvas.height)
     this.allCircle.forEach(circle => {
       circle.animateRumble()
     });
-
     requestAnimationFrame(() => this.animate());
+    
   }
   
 
