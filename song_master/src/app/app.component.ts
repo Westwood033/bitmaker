@@ -1,112 +1,149 @@
-import { Component, createNgModuleRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { Circle } from './models/circle.model';
-
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CommonModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  allCircle : Circle[] = []
+  allCircle: Circle[] = [];
   title = 'song-master';
+  edit = true;
+  private isAnimating = false;
+  public speed = 0.01;
 
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
-  ton: number = 1; // Variable pour ajuster la tonalité (-1 à 1)
-  
-
   private context!: CanvasRenderingContext2D;
 
-
   ngAfterViewInit() {
-    // Obtenir le contexte 2D du canvas
     this.context = this.canvas.nativeElement.getContext('2d')!;
   }
 
-
-  getCanvasCenter() 
-  {
-    const width = this.canvas.nativeElement.clientWidth;;
+  getCanvasCenter() {
+    const width = this.canvas.nativeElement.clientWidth;
     const height = this.canvas.nativeElement.clientHeight;
-    return {
-      x: width / 2,
-      y: height / 2
-    };
+    return { x: width / 2, y: height / 2 };
   }
-  
+
+  // -------------------------------------------------------
+  // 🟢 Création ou interaction avec un cercle
+  // -------------------------------------------------------
   createCircle(event: MouseEvent) {
+    if (!this.edit) return; // ❌ Blocage si on n'est pas en mode édition
+
     const rect = this.canvas.nativeElement.getBoundingClientRect();
-    const x = event.clientX - rect.left; // Position X du clic
-    const y = event.clientY - rect.top;  // Position Y du clic
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
     const center = this.getCanvasCenter();
     const radius = Math.sqrt((center.x - x) ** 2 + (center.y - y) ** 2);
 
-
-    const foundCircle = this.allCircle.find(circle => 
-      circle.radius === radius || (circle.radius < radius + 3 && circle.radius > radius - 3) 
+    const foundCircle = this.allCircle.find(
+      circle =>
+        circle.radius === radius ||
+        (circle.radius < radius + 3 && circle.radius > radius - 3)
     );
 
-    const constraint = this.allCircle.some(circle => 
-      circle.radius > radius - 10 && circle.radius < radius + 10
+    const constraint = this.allCircle.some(
+      circle => circle.radius > radius - 10 && circle.radius < radius + 10
     );
 
-    if(!foundCircle && !constraint)
-    {
-    const newCircle = new Circle(radius, 'white', this.context, center);
-  
-    this.allCircle.push(newCircle);
+    if (!foundCircle && !constraint) {
+      const newCircle = new Circle(radius, 'white', this.context, center, this.speed);
+      newCircle.onUpdate = () => this.base();
+      this.allCircle.push(newCircle);
+      this.allCircle.sort((a, b) => a.radius - b.radius);
     }
-    
 
-    if(foundCircle){
-      const dx = x - center.x
-      const dy = y - center.y
-
-      const distance = Math.sqrt(dx * dx + dy * dy)
-
-      const closex = center.x + (dx / distance) * foundCircle.radius 
-      const closey = center.y + (dy / distance) * foundCircle.radius 
-
-      foundCircle.drawCheck(closex, closey, false);
-      }
+    if (foundCircle) {
+      const dx = x - center.x;
+      const dy = y - center.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const closex = center.x + (dx / distance) * foundCircle.radius;
+      const closey = center.y + (dy / distance) * foundCircle.radius;
+      foundCircle.drawCheck(closex, closey, false, true);
+      this.base();
+    }
   }
 
-  animate(){
-    
-    this.context.clearRect(0, 0, this.context.canvas.width , this.context.canvas.height)
+  hoverCheck(event: MouseEvent) {
+    const rect = this.canvas.nativeElement.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
     this.allCircle.forEach(circle => {
-      circle.animateRumble()
+      circle.changeColorCheck(mouseX, mouseY);
     });
+  }
+
+  // -------------------------------------------------------
+  // 🧩 Modes d’édition et d’animation
+  // -------------------------------------------------------
+  start_animation() {
+    this.allCircle.forEach(c => c.resetRumble());
+    this.edit = false;
+    if (!this.isAnimating) {
+      this.isAnimating = true;
+      this.animate();
+    }
+  }
+
+  start_edit() {
+    this.edit = true;
+    this.isAnimating = false;
+    this.base();
+  }
+
+  // -------------------------------------------------------
+  // 🔴 Gestion sélection / suppression
+  // -------------------------------------------------------
+  toggleSelect(circle: Circle) {
+    if (!this.edit) return; // ❌ Interdiction hors mode édition
+    circle.selected = !circle.selected;
+    this.base();
+  }
+
+  deleteSelected() {
+    if (!this.edit) return; // ❌ Interdiction hors mode édition
+    this.allCircle = this.allCircle.filter(c => !c.selected);
+    this.base();
+  }
+
+  change_speed(speed: string){
+    if (!this.edit) return;
+    this.allCircle.forEach(circle => {
+      this.speed = Number(speed)/1000;
+      circle.speed = this.speed;
+    })
+  }
+
+  // -------------------------------------------------------
+  // 🎨 Redessin du canvas
+  // -------------------------------------------------------
+  base() {
+    this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+    console.log("j'ai tout effacer")
+    this.allCircle.forEach(circle => {
+      circle.drawSelf();
+      circle.drawRumble('white', circle.center.x + circle.radius, circle.center.y);
+      circle.checks.forEach(check => {
+        console.log("je suis sensé dessiner ici")
+        circle.drawCheck(check.x, check.y, true);
+      });
+    });
+  }
+
+  animate() {
+    this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+    this.allCircle.forEach(circle => circle.animateRumble(this.edit));
+    if (!this.isAnimating) return;
     requestAnimationFrame(() => this.animate());
-    
-  }
-  
-
-  playNote(frequency: number, duration: number  ) {
-    // Créer un contexte audio
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-
-    // Créer un oscillateur
-    const oscillator = audioContext.createOscillator();
-
-    // Définir la fréquence (qui correspond à la hauteur de la note)
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-
-    // Connecter l'oscillateur au contexte audio et démarrer le son
-    oscillator.connect(audioContext.destination);
-    oscillator.start();
-
-    // Arrêter le son après 1 seconde
-    oscillator.stop(audioContext.currentTime + duration);
   }
 
-  pump(rayon: number){
-    this.playNote(1/rayon, 0.1) // à améliorer 
+  get anySelected() {
+    return this.allCircle.some(c => c.selected);
   }
-
-
 }
-

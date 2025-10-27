@@ -1,4 +1,72 @@
-<canvas #canvas width="800" height="600" (click)="createCircle($event)" style="background-color: black; border: 1px solid black;"></canvas>
-<button (click)="animate()" >START</button>
-  
-  
+<div class="main-container">
+  <!-- 🎨 Partie gauche : Canvas -->
+  <div class="left-panel">
+    <canvas
+      #canvas
+      width="800"
+      height="600"
+      (click)="createCircle($event)"
+      (mousemove)="hoverCheck($event)"
+    ></canvas>
+  </div>
+
+  <!-- 📋 Partie droite : Contrôles -->
+  <div class="right-panel">
+    <!-- Boutons -->
+    <div class="button-group">
+      <button class="action-btn" (click)="start_edit()" [disabled]="edit">EDIT</button>
+      <button class="action-btn" (click)="start_animation()" [disabled]="!edit">START</button>
+      <button
+        class="action-btn delete-main"
+        (click)="deleteSelected()"
+        [disabled]="!edit || !anySelected"
+      >
+        Supprimer
+      </button>
+    </div>
+
+    <div>
+        <input #speedInput type="number" value=10 class="action-btn" [disabled]="!edit">
+        <button type="number" class="action-btn" (click)="change_speed(speedInput.value)" [disabled]="!edit">SUBMIT</button>
+      </div>
+
+    <!-- Tableau des cercles -->
+    <table class="circle-table">
+      <thead>
+        <tr>
+          <th style="text-align: left;">Select</th>
+          <th style="text-align: left;">Cercle</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let circle of allCircle"
+          [style.color]="circle.selected ? 'red' : 'white'"
+          style="height: 40px;"
+        >
+          <td>
+            <input
+              type="checkbox"
+              [checked]="circle.selected"
+              (change)="toggleSelect(circle)"
+              [disabled]="!edit"
+            />
+          </td>
+          <td>
+            <!-- Conteneur fixe pour la barre -->
+            <div
+              style="height: 10px; width: 100%; background-color: #333; border-radius: 5px; overflow: hidden; display: flex; align-items: center;"
+            >
+              <!-- Barre de taille fixe standard -->
+              <div
+                class="circle-preview"
+                style="width: 60px; height: 10px; background-color: #888; border-radius: 5px; margin-left: 0;"
+                [style.backgroundColor]="circle.selected ? 'red' : '#888'"
+              ></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
