@@ -35,7 +35,6 @@ export class AppComponent {
   // -------------------------------------------------------
   createCircle(event: MouseEvent) {
     if (!this.edit) return; // ❌ Blocage si on n'est pas en mode édition
-
     const rect = this.canvas.nativeElement.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -113,6 +112,7 @@ export class AppComponent {
   }
 
   change_speed(speed: string){
+    if(Number(speed) > 100) return;
     if (!this.edit) return;
     this.allCircle.forEach(circle => {
       this.speed = Number(speed)/1000;
@@ -125,12 +125,10 @@ export class AppComponent {
   // -------------------------------------------------------
   base() {
     this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
-    console.log("j'ai tout effacer")
     this.allCircle.forEach(circle => {
       circle.drawSelf();
       circle.drawRumble('white', circle.center.x + circle.radius, circle.center.y);
       circle.checks.forEach(check => {
-        console.log("je suis sensé dessiner ici")
         circle.drawCheck(check.x, check.y, true);
       });
     });
