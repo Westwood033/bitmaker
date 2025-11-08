@@ -16,6 +16,19 @@ export class AppComponent {
   edit = true;
   private isAnimating = false;
   public speed = 0.01;
+  public showPopup = false;
+  selectedCircle: Circle | null = null;
+
+  colors = [
+    { name: 'Jaune', value: 'yellow' },
+    { name: 'Bleu clair', value: 'lightblue' },
+    { name: 'Orange', value: 'orange' },
+    { name: 'Blanc', value: 'white' },
+    { name: 'Vert', value: 'green' },
+    { name: 'Violet', value: 'purple' },
+    { name: 'Rose', value: 'pink' },
+    { name: 'Beige', value: 'beige' },
+  ];
 
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
   private context!: CanvasRenderingContext2D;
@@ -28,6 +41,22 @@ export class AppComponent {
     const width = this.canvas.nativeElement.clientWidth;
     const height = this.canvas.nativeElement.clientHeight;
     return { x: width / 2, y: height / 2 };
+  }
+
+  openColorPopup(circle: Circle) {
+  if(!this.edit) return;
+  this.selectedCircle = circle;
+  this.showPopup = true;
+}
+
+  // Méthode pour changer la couleur du cercle sélectionné
+  changeCircleColor(color: string) {
+    if (this.selectedCircle) {
+      this.selectedCircle.color = color;
+      this.showPopup = false;
+      this.base();
+      this.selectedCircle = null;
+    }
   }
 
   // -------------------------------------------------------
@@ -52,7 +81,7 @@ export class AppComponent {
     );
 
     if (!foundCircle && !constraint) {
-      const newCircle = new Circle(radius, 'white', this.context, center, this.speed);
+      const newCircle = new Circle(radius, 'orange', this.context, center, this.speed);
       newCircle.onUpdate = () => this.base();
       this.allCircle.push(newCircle);
       this.allCircle.sort((a, b) => a.radius - b.radius);
@@ -127,7 +156,7 @@ export class AppComponent {
     this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
     this.allCircle.forEach(circle => {
       circle.drawSelf();
-      circle.drawRumble('white', circle.center.x + circle.radius, circle.center.y);
+      circle.drawRumble(circle.color, circle.center.x + circle.radius, circle.center.y);
       circle.checks.forEach(check => {
         circle.drawCheck(check.x, check.y, true);
       });

@@ -26,47 +26,60 @@
     </div>
 
     <div>
-        <input #speedInput type="number" value=10 class="action-btn" [disabled]="!edit">
-        <button type="submit" class="action-btn" (click)="change_speed(speedInput.value)" [disabled]="!edit">SUBMIT</button>
-      </div>
+      <input #speedInput type="number" value=10 class="action-btn" [disabled]="!edit">
+      <button type="submit" class="action-btn" (click)="change_speed(speedInput.value)" [disabled]="!edit">SUBMIT</button>
+    </div>
 
     <!-- Tableau des cercles -->
-    <table class="circle-table">
-      <thead>
-        <tr>
-          <th style="text-align: left;">Select</th>
-          <th style="text-align: left;">Cercle</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          *ngFor="let circle of allCircle"
-          [style.color]="circle.selected ? 'red' : 'white'"
-          style="height: 40px;"
-        >
-          <td>
-            <input
-              type="checkbox"
-              [checked]="circle.selected"
-              (change)="toggleSelect(circle)"
-              [disabled]="!edit"
-            />
-          </td>
-          <td>
-            <!-- Conteneur fixe pour la barre -->
-            <div
-              style="height: 10px; width: 100%; background-color: #333; border-radius: 5px; overflow: hidden; display: flex; align-items: center;"
-            >
-              <!-- Barre de taille fixe standard -->
-              <div
-                class="circle-preview"
-                style="width: 60px; height: 10px; background-color: #888; border-radius: 5px; margin-left: 0;"
-                [style.backgroundColor]="circle.selected ? 'red' : '#888'"
-              ></div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+   <div class="table-container">
+  <table class="circle-table">
+    <thead>
+      <tr>
+        <th style="text-align: left;">Select</th>
+        <th style="text-align: left;">Cercle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let circle of allCircle"
+        [style.color]="circle.selected ? 'red' : 'orange'"
+        style="height: 40px;"
+      >
+        <td>
+          <input
+            type="checkbox"
+            [checked]="circle.selected"
+            (change)="toggleSelect(circle)"
+            [disabled]="!edit"
+          />
+        </td>
+        <td>
+          <div
+            class="circle-preview"
+            [style.backgroundColor]="circle.selected ? 'red' : circle.color"
+            (click)="openColorPopup(circle)"
+          ></div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
   </div>
+
+<div class="popup" [style.display]="showPopup ? 'flex' : 'none'">
+  <div class="popup-content">
+    <h3>Changer la couleur du cercle ? </h3>
+    <div class="color-buttons">
+      <button
+        *ngFor="let c of colors"
+        [style.backgroundColor]="c.value"
+        [disabled]="selectedCircle?.color === c.value"
+        (click)="changeCircleColor(c.value)"
+      >
+      </button>
+    </div>
+    <button (click)="showPopup = false" class="close-btn">Fermer</button>
+  </div>
+</div>
+
 </div>

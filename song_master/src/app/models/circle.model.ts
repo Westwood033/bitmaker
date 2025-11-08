@@ -20,7 +20,7 @@ export class Circle {
     public speed: number,
   ) {
     this.drawSelf();
-    this.drawRumble("white", this.center.x + this.radius, this.center.y);
+    this.drawRumble("orange", this.center.x + this.radius, this.center.y);
     
     const notes = ['c4', 'd4', 'e4', 'f4', 'g4', 'a4', 'b4'];
     this.note = notes[(Math.floor(this.radius / 20)) % notes.length];
@@ -34,20 +34,42 @@ export class Circle {
   // ✅ Dessin du cercle principal
   // ---------------------------------------------------------
   drawSelf(customColor?: string) {
-    this.context.beginPath();
-    this.context.arc(this.center.x, this.center.y, this.radius, 0, Math.PI * 2);
-    this.context.strokeStyle = customColor ?? (this.selected ? "red" : this.color);
-    this.context.lineWidth = 2;
-    this.context.stroke();
-    this.context.closePath();
+
+    const mainColor = customColor ?? (this.selected ? "red" : this.color);
+    const glowLevels = [40, 20, 10]; // intensités du blur
+    const alphaLevels = [0.2, 0.4, 0.8]; // transparences correspondantes
+
+    glowLevels.forEach((blur, i) => {
+      this.context.save();
+      this.context.shadowBlur = blur;
+      this.context.shadowColor = mainColor;
+      this.context.strokeStyle = mainColor;
+      this.context.globalAlpha = alphaLevels[i];
+      this.context.lineWidth = 3;
+      this.context.beginPath();
+      this.context.arc(this.center.x, this.center.y, this.radius, 0, Math.PI * 2);
+      this.context.stroke();
+      this.context.closePath();
+      this.context.restore();
+    });
+  
   }
 
   drawRumble(color: string, x: number, y: number) {
-    this.context.beginPath();
-    this.context.arc(x, y, 5.5, 0, Math.PI * 2);
-    this.context.fillStyle = color;
-    this.context.fill();
-    this.context.closePath();
+    const glowLevels = [40, 20, 10]; // intensités du blur
+    const alphaLevels = [0.2, 0.4, 0.8]; 
+    glowLevels.forEach((blur, i) => {
+      this.context.save();
+      this.context.shadowBlur = blur;
+      this.context.shadowColor = color;
+      this.context.globalAlpha = alphaLevels[i];
+      this.context.beginPath();
+      this.context.arc(x, y, 5.5, 0, Math.PI * 2);
+      this.context.fillStyle = color;
+      this.context.fill();
+      this.context.closePath();
+      this.context.restore();
+    });
     this.rumble = { x, y };
   }
 
@@ -61,7 +83,7 @@ export class Circle {
 
     this.drawSelf();
     this.checks.forEach((check) => this.drawCheck(check.x, check.y, true));
-    this.drawRumble("white", this.rumble.x, this.rumble.y);
+    this.drawRumble(this.color, this.rumble.x, this.rumble.y);
   }
 
   // ---------------------------------------------------------
@@ -73,13 +95,13 @@ export class Circle {
       const dy = mouseY - check.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      this.context.beginPath();
-      this.context.arc(check.x, check.y, 6, 0, Math.PI * 2);
-      this.context.fillStyle = "black";
-      this.context.fill();
-      this.context.strokeStyle = distance <= 13 ? "red" : this.color;
-      this.context.stroke();
-      this.context.closePath();
+        this.context.beginPath();
+        this.context.arc(check.x, check.y, 6, 0, Math.PI * 2);
+        this.context.fillStyle = "black";
+        this.context.fill();
+        this.context.strokeStyle = distance <= 13 ? "red" : this.color;
+        this.context.stroke();
+        this.context.closePath();
     });
   }
 
@@ -131,7 +153,7 @@ export class Circle {
     if (isPaused) {
       this.drawSelf();
       this.checks.forEach((check) => this.drawCheck(check.x, check.y, true));
-      this.drawRumble("white", this.rumble.x, this.rumble.y);
+      this.drawRumble(this.color, this.rumble.x, this.rumble.y);
       return;
     }
 
@@ -154,7 +176,7 @@ export class Circle {
       }
     });
 
-    this.drawRumble("white", this.rumble.x, this.rumble.y);
+    this.drawRumble(this.color, this.rumble.x, this.rumble.y);
   }
 
   collision(x: number, y: number, xrumble: number, yrumble: number) {
